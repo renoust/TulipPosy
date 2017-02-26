@@ -67,11 +67,15 @@ var TP = TP || {};
         __g__.showLinks = null;
         __g__.nodeInformation = null;
 
-        __g__.metric_BC = null;
+        __g__.metric_BC = "viewMetric";
         __g__.metric_SP = null;
         __g__.combined_foreground = null;
         __g__.acceptedGraph = [];
         __g__.graph = null;
+        __g__.label_property = "label";
+        __g__.descriptors_property = "descriptors";
+        __g__.leapfrog_target = "descriptors";
+        __g__.synchronized_views = ["descriptors"];
         
         __g__.updateEventHandler = new TP.UpdateEventHandler("graph", __g__.ID);
         

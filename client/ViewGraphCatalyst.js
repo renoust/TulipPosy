@@ -8,7 +8,6 @@ var TP = TP || {};
         
         //id, bouton, name, nodeColor, linkColor, backgroundColor, labelColor, nodeShape, type, idAssociation
         var __g__ = this;
-        
         var zoomCombined = 
         [
             ["free", {id:"zoomAll"}, 
@@ -255,6 +254,19 @@ var TP = TP || {};
                     minLength: 0
                 }]];
 
+        var allproperty = [
+            [7,{id:"nodeProperty"},
+                {
+                    source: function(searchStr, sourceCallback){
+                        var propertyList = ["--"];
+                        var oneNode = __g__.getGraph().nodes()[0];
+                        for (var prop in oneNode)
+                            propertyList.push(prop);
+                        sourceCallback(propertyList);
+                    },
+                    minLength: 0
+                }]];
+
 
         var interactors = [
 
@@ -274,11 +286,19 @@ var TP = TP || {};
             {interactorLabel:'Leapfrog to substrates', interactorParameters: '', callbackBehavior: {click: function () {
                 TP.ObjectReferences().InteractionObject.toggleSelection(__g__.getID());
             }}, interactorGroup:"Selection"},
-            {interactorLabel:function(){return 'Selection operator is: ' +TP.Context().tabOperator[__g__.getID()];}, interactorParameters:'', callbackBehavior:{click: function () {
-                TP.ObjectReferences().InteractionObject.toggleCatalystSyncOperator(__g__.getID());
-                //var selList = [];
-                __g__.setPreviousSourceSelection([]);
-                __g__.getController().sendMessage("nodeSelected", {selList: __g__.getSourceSelection()});
+            {interactorLabel:function(){
+                    TP.Context().tabOperator[__g__.getID()] == undefined;
+                    TP.Context().tabOperator[__g__.getID()] = 'OR';
+                    operatorString = 'Selection operator is: ' +TP.Context().tabOperator[__g__.getID()];
+                    return operatorString;
+                }, 
+                interactorParameters:'', 
+                callbackBehavior:{click: function () {
+                    TP.ObjectReferences().InteractionObject.toggleCatalystSyncOperator(__g__.getID());
+                    //var selList = [];
+                    __g__.setPreviousSourceSelection([]);
+                    __g__.getController().sendMessage("nodeSelected", {selList: __g__.getSourceSelection()});
+
             }}, interactorGroup:"Selection"},
             
             
@@ -353,22 +373,6 @@ var TP = TP || {};
                 }}, interactorGroup:"Measure"},
 
 
-            {interactorLabel:'Scatter plot (nvd3 - experimental)', interactorParameters:'', callbackBehavior:{click: function () {
-                __g__.getController().sendMessage("drawScatterPlotNVD3");
-            }}, interactorGroup:"Open View"},
-            {interactorLabel:'Spreadsheet (experimental)', interactorParameters: '', callbackBehavior: {click: function () {
-                __g__.getController().sendMessage("drawDataBase");
-            }}, interactorGroup:"Open View"},
-            {interactorLabel:'Barchart (experimental)', interactorParameters: '', callbackBehavior: {click: function () {
-                __g__.getController().sendMessage("drawBarChart", {smell: 'rotate'});
-            }}, interactorGroup:"Open View"},
-            {interactorLabel:'Horizontal barchart (experimental)', interactorParameters: '', callbackBehavior: {click: function () {
-                __g__.getController().sendMessage("drawBarChart", {smell: 'base'});
-            }}, interactorGroup:"Open View"},
-            {interactorLabel:'ScatterPlot (experimental)', interactorParameters: '', callbackBehavior: {click: function () {
-                __g__.getController().sendMessage("drawScatterPlot");
-            }}, interactorGroup:"Open View"},
-
             {interactorLabel:'Node size mapping',interactorParameters:tl2,callbackBehavior:{
                 //click:function(){console.log('click on the button');},
                 call:function(paramList){
@@ -380,6 +384,12 @@ var TP = TP || {};
                 call:function(paramList){
                     //__g__.getController().sendMessage('color mapping', {nodeProperty:paramList.nodeProperty, idView: TP.Context().activeView})
                     TP.ObjectReferences().VisualizationObject.colorMapping(paramList.nodeProperty, __g__.getID());
+                }}, interactorGroup:"Mapping"},
+
+            {interactorLabel:'To labels',interactorParameters:allproperty,callbackBehavior:{
+                call:function(paramList){
+                    __g__.label_property = paramList.nodeProperty;
+                    __g__.getController().sendMessage("arrangeLabels");
                 }}, interactorGroup:"Mapping"},
 
             {interactorLabel:'Label metric ordering',interactorParameters:tl2,callbackBehavior:{
@@ -437,7 +447,8 @@ var TP = TP || {};
         
         parameters.interactorList = interactors;
         
-        __g__ = new TP.ViewGraph(parameters);    
+        __g__ = new TP.ViewGraph(parameters);
+    
 
         __g__.initStates = function () {
 
@@ -550,7 +561,7 @@ var TP = TP || {};
             }, {bindings:null, fromAll:true, useless:true, activate:true});
 
             __g__.controller.addEventState("drawScatterPlotNVD3",  function (_event) {
-                TP.ViewNVD3().drawScatterPlot(_event);
+                TP.ViewNVD3ScatterPlot().drawScatterPlot(_event);
             }, {bindings:null, fromAll:true, useless:true, activate:true});
 
             __g__.controller.setCurrentState("select");

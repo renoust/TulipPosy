@@ -235,6 +235,89 @@ var TP = TP || {};
                     },
                     minLength: 0
                 }]];
+
+        var mxproperty = [
+            [7,{id:"mxProperty"},
+                {
+                    source: function(searchStr, sourceCallback){
+                        var propertyList = [];
+                        var oneNode = __g__.getGraph().nodes()[0];
+                        
+
+                        for (var v in __g__.getAssociatedView("catalyst"))
+                        {
+                            var cview = __g__.getAssociatedView("catalyst")[v]
+                            propertyList.push(cview.descriptors_property);
+                        }
+
+                        sourceCallback(propertyList);
+                    },
+                    minLength: 0
+                }]];
+
+        var syncviews = [
+            [2,{id:"syncviews"},
+                  
+                    function(){
+                        var returnArray = []
+                        for (var v in __g__.getAssociatedView("catalyst"))
+                        {
+                            var cview = __g__.getAssociatedView("catalyst")[v];
+
+                            var checked = false;
+                            if (__g__.synchronized_views.indexOf(cview.descriptors_property)>-1)
+                            {
+                                checked = true;
+                            }
+                            returnArray.push({name:"checked", value:"checked", checked:checked, text:cview.descriptors_property})
+
+                        }
+                        returnArray.push({name:"onthefly", value:"checked", checked:false, text:"Leapfrog on the fly?"});
+
+                        return returnArray;//[{name:"letter",value:"4", text:"delta"},{name:"alpha",value:"5",text:"epsilon"}]
+                    }
+                    
+                  ,"catalyst"]
+
+            //            function()
+            //{
+            //    return  ["checkbox", {id: "bothViews"}, [{id:"bothViews_cb",text:"both views",value:"checked",checked:"false"}]],
+            //    [2, {id:"checkbox"},,
+
+
+            //}
+
+
+              /*  {
+                    source: function(searchStr, sourceCallback){
+                        var propertyList = [];
+                        var oneNode = __g__.getGraph().nodes()[0];
+                        
+
+                        for (var v in __g__.getAssociatedView("catalyst"))
+                        {
+                            var cview = __g__.getAssociatedView("catalyst")[v]
+                            propertyList.push(cview.descriptors_property);
+                        }
+
+                        sourceCallback(propertyList);
+                    },
+                    minLength: 0
+                }
+                */];
+
+        var allproperty = [
+            [7,{id:"nodeProperty"},
+                {
+                    source: function(searchStr, sourceCallback){
+                        var propertyList = ['--'];
+                        var oneNode = __g__.getGraph().nodes()[0];
+                        for (var prop in oneNode)
+                            propertyList.push(prop);
+                        sourceCallback(propertyList);
+                    },
+                    minLength: 0
+                }]];
                 
           var searchBox = [
             ["autocomplete", {id:"searchBox"},
@@ -304,9 +387,6 @@ var TP = TP || {};
             {interactorLabel:'Force layout', interactorParameters: '', callbackBehavior: {click: function () {
                 __g__.getController().sendMessage('callLayout', {layoutName: 'FM^3 (OGDF)', idView: __g__.getID()});
             }}, interactorGroup:"Layout"},
-            {interactorLabel:'MDS layout', interactorParameters: '', callbackBehavior: {click: function () {
-                __g__.getController().sendMessage('callLayout', {layoutName: 'MDS', idView: __g__.getID()});
-            }}, interactorGroup:"Layout"},
             /*{interactorLabel:'Tulip layout algorithm', interactorParameters:tl, callbackBehavior:{call: function (layout) {
                 __g__.getController().sendMessage('callLayout', {layoutName: layout.selectedAlgo, idView: __g__.getID()})
             }}, interactorGroup:"Layout"},
@@ -318,8 +398,10 @@ var TP = TP || {};
                 call:function(layout){
                     __g__.getController().sendMessage('changeLayout', {layoutName:layout.algoTulip, idView: TP.Context().activeView});
             }}, interactorGroup:"Layout"},
-            {interactorLabel:'Harmonize layout from catalysts', interactorParameters: '', callbackBehavior: {click: function () {
-                TP.ObjectReferences().ClientObject.syncLayouts(__g__.getID());
+
+            {interactorLabel:'Harmonize layout from catalysts', interactorParameters: mxproperty, callbackBehavior: {call: function (paramList) {
+
+                TP.ObjectReferences().ClientObject.syncLayouts(__g__.getID(), undefined, undefined, paramList.mxProperty);
             }}, interactorGroup:"Layout"},
 
 
@@ -400,35 +482,17 @@ var TP = TP || {};
             }, interactorGroup:"Selection"},
 
 
-            {interactorLabel:'Multiplex analysis', interactorParameters: '', callbackBehavior: {click: function () {
+            {interactorLabel:'Multiplex analysis', interactorParameters: allproperty, callbackBehavior: {call: function (paramList) {
                 __g__.getController().sendMessage("analyseGraph", (function(){
                     var params = __g__.viewGraphCatalystParameters();
                     params.idSourceAssociatedView = __g__.getID();
+                    __g__.descriptors_property = paramList.nodeProperty;
+                    params.multiplex_property = paramList.nodeProperty;
                     return {viewIndex: __g__.getID(), 
                             viewGraphCatalystParameters: params};
                      })());
             }}, interactorGroup:"Open View"},
 
-            {interactorLabel:'Scatter plot (nvd3 - experimental)', interactorParameters:'', callbackBehavior:{click: function () {
-                __g__.getController().sendMessage("drawScatterPlotNVD3");
-            }}, interactorGroup:"Open View"},
-
-            {interactorLabel:'Spreadsheet (experimental)', interactorParameters: '', callbackBehavior: {click: function () {
-                __g__.getController().sendMessage("drawDataBase");
-            }}, interactorGroup:"Open View"},
-
-
-            {interactorLabel:'Barchart (experimental)', interactorParameters: '', callbackBehavior: {click: function () {
-                __g__.getController().sendMessage("drawBarChart", {smell: 'rotate'});
-            }}, interactorGroup:"Open View"},
-
-            {interactorLabel:'Horizontal barchart (experimental)', interactorParameters: '', callbackBehavior: {click: function () {
-                __g__.getController().sendMessage("drawBarChart", {smell: 'base'});
-            }}, interactorGroup:"Open View"},
-
-            {interactorLabel:'Scatter plot (experimental)', interactorParameters: '', callbackBehavior: {click: function () {
-                __g__.getController().sendMessage("drawScatterPlot");
-            }}, interactorGroup:"Open View"},
 
             {interactorLabel:'Node size mapping',interactorParameters:tl2,callbackBehavior:{
                 //click:function(){console.log('click on the button');},
@@ -442,6 +506,13 @@ var TP = TP || {};
                     //__g__.getController().sendMessage('color mapping', {nodeProperty:paramList.nodeProperty, idView: TP.Context().activeView})
                     TP.ObjectReferences().VisualizationObject.colorMapping(paramList.nodeProperty, __g__.getID());
                 }}, interactorGroup:"Mapping"},
+
+            {interactorLabel:'To labels',interactorParameters:allproperty,callbackBehavior:{
+                call:function(paramList){
+                    __g__.label_property = paramList.nodeProperty;
+                    __g__.getController().sendMessage("arrangeLabels");
+                }}, interactorGroup:"Mapping"},
+
                 
             {interactorLabel:'Label metric ordering',interactorParameters:tl2,callbackBehavior:{
                 //click:function(){console.log('click on the button');},
@@ -480,6 +551,29 @@ var TP = TP || {};
                     __g__.graphDrawing.changeLayout(__g__.graph, 0);
             }}, interactorGroup:"View"},
 
+            {interactorLabel:'Leapfrog target', interactorParameters: mxproperty, callbackBehavior: {call: function (paramList) {
+                __g__.leapfrog_target = paramList.mxProperty;
+            }}, interactorGroup:"View"},
+
+            {interactorLabel:'Synchronized views', interactorParameters: syncviews, callbackBehavior: {call: function (checked) {
+                    if (checked["checked"])
+                    {
+                        console.log("changing checked")
+                        var prop = checked["checked"].text;
+                        var val = checked["checked"].val;
+                        var index = __g__.synchronized_views.indexOf(prop);
+
+                        if (!val && index > -1)
+                            __g__.synchronized_views.splice(index, 1);
+
+                        if (val && index == -1)
+                            __g__.synchronized_views.push(prop);
+                    }
+                    if (checked["onthefly"])
+                    {
+                        TP.Context().leapfrogOnTheFly = checked["onthefly"].val;
+                    }
+            }}, interactorGroup:"View"},
  
             
             // ['b3','circular layout','',{click:function(){TP.ObjectReferences().ClientObject.callLayout('Circular', __g__.getID())}}],
@@ -557,17 +651,6 @@ var TP = TP || {};
 
             __g__.controller.addEventState("rotateGraph",  function (_event) {
                 TP.Visualization().rotateGraph(_event);
-            }, {bindings:null, fromAll:true, useless:true, activate:true});
-
-            __g__.controller.addEventState("drawBarChart",  function (_event) {
-                TP.BarChart().drawBarChart(_event);
-            }, {bindings:null, fromAll:true, useless:true, activate:true});
-            __g__.controller.addEventState("drawScatterPlot",  function (_event) {
-                TP.ScatterPlot().drawScatterPlot(_event);
-            }, {bindings:null, fromAll:true, useless:true, activate:true});
-
-            __g__.controller.addEventState("drawScatterPlotNVD3",  function (_event) {
-                TP.ViewNVD3().drawScatterPlot(_event);
             }, {bindings:null, fromAll:true, useless:true, activate:true});
 
             __g__.controller.addEventState("runZoom",  function (_event) {

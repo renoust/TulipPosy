@@ -10,7 +10,7 @@
  * useful either.
  *
  * @requires d3.js
- * @authors Guy Melancon, Benjamin Renoust, Damien Rosmorduc
+ * @authors Benjamin Renoust, Guy Melancon, Damien Rosmorduc
  * @created May 2012
  ***********************************************************************/
 
@@ -253,7 +253,8 @@ var TP = TP || {};
                 })
                 .on("mouseover", function (d) {
                     if (g.dragStarted == true) return;
-                    TP.Context().view[currentViewID].getController().sendMessage("mouseoverShowLabelNode", {data: d});
+                    g.showLabelNode(d)
+                    //TP.Context().view[currentViewID].getController().sendMessage("mouseoverShowLabelNode", {data: d});
                 })
                 .on("mouseout", function () {
                     
@@ -369,6 +370,7 @@ var TP = TP || {};
                 .style("opacity", TP.Context().defaultNodeOpacity)
                 .style("fill", function(d){
                     var c = TP.Context().view[currentViewID].getNodesColor();
+                    //var c = g.nodesColor;
                     if (d._color == undefined)
                         d._color = c;
                     return d._color;
@@ -783,7 +785,6 @@ var TP = TP || {};
             g.nodeSizeMap(_graph, dTime, {metric: "viewMetric"});
         };
 
-
         g.nodeSizeMap = function (_graph, dTime, params) {
             g.cGraph = _graph;
 
@@ -900,7 +901,6 @@ var TP = TP || {};
             diff = true;
             g.cGraph = _graph;
             //we would like it better as a parameter
-            //assert(false, "turlututu");
             scaleMin = 3.0;
             scaleMax = 12.0;
 
@@ -1191,7 +1191,7 @@ var TP = TP || {};
                 .style("font-size", TP.Context().view[currentViewID].labelFontSize)
                 .text(function (dd) {
                     if(dd.visible || dd.baseID == currentNode.baseID)
-                        return dd.label;
+                        return dd[TP.Context().view[currentViewID].label_property];
                 });
             
             return;
@@ -1479,7 +1479,7 @@ var TP = TP || {};
                     return TP.Context().view[currentViewID].labelFontSize;
                 })
                 .text(function(dd){
-                    return limitLabel(dd.label);
+                    return limitLabel(dd[TP.Context().view[currentViewID].label_property]);
                 });
             var labelsArray = [];
             var iterArray = [];

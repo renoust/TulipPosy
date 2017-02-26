@@ -3,7 +3,7 @@
  * This module updates the graph views by drawing a new graph from a
  * given set of data
  * @requires d3.js
- * @authors Guy Melancon, Benjamin Renoust
+ * @authors Benjamin Renoust, Guy Melancon
  * @created May 2012
  ***********************************************************************/
 
@@ -32,7 +32,6 @@ var TP = TP || {};
 
             // we need to rescale the graph so it will fit the current svg 
             //frame and wont overlap with the buttons
-            //console.log("syncLayoutData: ", data.data);
             //objectReferences.VisualizationObject.rescaleGraph(data);
 
             //graph_drawing.rescaleGraph(contxt,data);
@@ -94,7 +93,6 @@ var TP = TP || {};
 
              var deltaX_s = p2prime_s.x - p2_s.x * scaleX_s
              var deltaY_s = p2prime_s.y - p2_s.y * scaleY_s
-             //console.log("delta substrate: ",scaleX_s,scaleY_s,deltaX_s, deltaY_s)
 
              var p1_c = data.data['catalyst'][0];
              var p2_c = data.data['catalyst'][1];
@@ -119,8 +117,6 @@ var TP = TP || {};
              var deltaX_c = p2prime_c.x - p2_c.x * scaleX_c
              var deltaY_c = p2prime_c.y - p2_c.y * scaleY_c
 
-             //console.log("delta catalyst points: ", p2prime_c.y, p2_c.y)
-             //console.log("delta catalyst: ",scaleX_c,scaleY_c,deltaX_c,deltaY_c)
 
              if(combinedGraph)
              {
@@ -157,10 +153,7 @@ var TP = TP || {};
 
         this.buildGraphFromData = function (data, target, forceLinks) { //substrate at bigin of project
 
-            //console.log('creating in tulip, and recieved data: ', data)
-            //console.log("here should be sid: ", data.data.sid)
             TP.Context().sessionSid = data.data.sid;
-            //console.log("the session sid has just been affected: ", TP.Context().sessionSid);
             //objectReferences.VisualizationObject.rescaleGraph(data)
 
 
@@ -187,9 +180,7 @@ var TP = TP || {};
         };
 
 
-        this.applySubstrateAnalysisFromData = function (data, target) { //catalyst at bingin of project, without generic programmation
-            //console.log("received data after analysis:")
-            //console.log(data);
+        this.applySubstrateAnalysisFromData = function (data, target, multiplex_property) { //catalyst at bingin of project, without generic programmation
             //TP.GraphDrawing(TP.Context().view[target].getGraph(),TP.Context().view[target].getSvg(), target).rescaleGraph(data);
 
             //objectReferences.VisualizationObject.rescaleGraph(data)
@@ -198,9 +189,7 @@ var TP = TP || {};
 
             var graph = TP.Context().view[target].getGraph();
 
-
             data.nodes.forEach(function(d){
-                //console.log(d);
                 if ("entanglementIndex" in d)
                 {
                     d.entanglementIndex = objectReferences.ToolObject.round(d.entanglementIndex, TP.Context().digitPrecision);
@@ -212,7 +201,7 @@ var TP = TP || {};
 
             graph.nodes(data.nodes, typeGraph); //catalyst
             graph.links(data.links, typeGraph); //catalyst
-
+            
             TP.Context().view[target].getGraphDrawing().rescaleGraph(graph);
 
             TP.Context().view[target].getGraph().edgeBinding();
@@ -220,13 +209,12 @@ var TP = TP || {};
             TP.Context().view[target].getGraphDrawing().clear();
             TP.Context().view[target].getGraphDrawing().draw();
 
+
             TP.Context().entanglement_homogeneity = objectReferences.ToolObject.round(data['data']['entanglement homogeneity'], TP.Context().digitPrecision);
             TP.Context().entanglement_intensity = objectReferences.ToolObject.round(data['data']['entanglement intensity'], TP.Context().digitPrecision);
             TP.Context().entanglement_homogeneity = 1 - Math.acos(TP.Context().entanglement_homogeneity)/(Math.PI/2);
             
-            //if(TP.Context().view[target].getAssociatedView("catalyst") != null)
-            //objectReferences.VisualizationObject.entanglementCaught(target, TP.Context().view[target].getAssociatedView("catalyst")[0].getID());
-            objectReferences.VisualizationObject.entanglementCaught(target);
+            objectReferences.VisualizationObject.entanglementCaught(target, null, multiplex_property);
             TP.Context().view[target].getController().sendMessage("sizeMapping", {parameter:"entanglementIndex", idView: target});
         };
 
@@ -332,8 +320,6 @@ var TP = TP || {};
                 ], true);
             }
 
-            //data.nodes.forEach(function(d){console.log(d)});
-            //TP.Context().getViewGraph(graphName).nodes().forEach(function(d){console.log(d)});
 
             var graph = null;
             var svg = null;
@@ -376,18 +362,13 @@ var TP = TP || {};
             TP.Context().view[graphName].setMetric_BC(pileCentrality.transformToArray("BarChart"));
             TP.Context().view[graphName].setMetric_SP(pileCentrality.transformToArray("ScatterPlot"));
 
-            //if(TP.Context().view[graphName].getAssociatedView("catalyst") != null)
-            //objectReferences.VisualizationObject.entanglementCaught(target, TP.Context().view[graphName].getAssociatedView("catalyst")[0].getID());
-            //objectReferences.VisualizationObject.entanglementCaught(graphName);
         };
 
 
-        this.syncGraphRequestFromData = function (data, selection, graphName) {
-            //console.log("in syncGraphRequestFromData line381 UpdateViews");
-
+        this.syncGraphRequestFromData = function (data, selection, graphName, multiplex_property) {
+            
                 
             data.nodes.forEach(function(d){
-                //console.log(d);
                 if ("entanglementIndex" in d)
                 {
                     d.entanglementIndex = objectReferences.ToolObject.round(d.entanglementIndex, TP.Context().digitPrecision);
@@ -395,8 +376,7 @@ var TP = TP || {};
                 }
             });
 
-            //console.log("within syncGraphRequestFromData")
-
+            
             var graph = null;
             var svg = null;
             var targetView = null;
@@ -407,21 +387,29 @@ var TP = TP || {};
 
             if (typeGraph == 'substrate' && TP.Context().view[graphName].getAssociatedView("catalyst") != null) {
                 //if(TP.Context().view[graphName].getAssociatedView("catalyst")[0].viewInitialized() == 1){
-                var tmp = TP.Context().view[graphName].getAssociatedView("catalyst");
-                var tmpEvent = {};
-                tmpEvent.associatedData = {};
-                tmpEvent.associatedData.catalystList = {} ;
-                data.nodes.forEach(function (d) {
-                    //console.log(d)
-                    tmpEvent.associatedData.catalystList[d.label] = d.entanglementIndex;
-                });
-                TP.Interface().addCatalystList(tmpEvent);
-                graph = tmp[0].getGraph();
-                svg = tmp[0].getSvg();
-                associatedViewFound = true;
-                //quick fix since we're not amanging multiple views yet
-                targetView = tmp[0].getID();
-                //}
+                var tmp = null;
+
+                for (var v in TP.Context().view[graphName].getAssociatedView("catalyst"))
+                {
+                    var cview = TP.Context().view[graphName].getAssociatedView("catalyst")[v];
+                    if (cview.descriptors_property == multiplex_property)
+                        tmp = cview
+                }
+                if (tmp != null)
+                {
+                    var tmpEvent = {};
+                    tmpEvent.associatedData = {};
+                    tmpEvent.associatedData.catalystList = {} ;
+                    data.nodes.forEach(function (d) {
+                        tmpEvent.associatedData.catalystList[d.label] = d.entanglementIndex;
+                    });
+                    TP.Interface().addCatalystList(tmpEvent);
+                    graph = tmp.getGraph();
+                    svg = tmp.getSvg();
+                    associatedViewFound = true;
+                    targetView = tmp.getID();
+                    //}
+                }
             }
 
             if (typeGraph == 'catalyst' && TP.Context().view[graphName].getAssociatedView("substrate") != null) {
@@ -436,24 +424,23 @@ var TP = TP || {};
 
             if ('data' in data) {
 
-                data['data']['entanglement homogeneity'] = objectReferences.ToolObject.round(data['data']['entanglement homogeneity'], TP.Context().digitPrecision);
-                data['data']['entanglement intensity'] = objectReferences.ToolObject.round(data['data']['entanglement intensity'], TP.Context().digitPrecision);
+                if (typeGraph == "catalyst" || TP.Context().view[graphName].leapfrog_target == multiplex_property)
+                {
 
-                TP.Context().entanglement_homogeneity = data['data']['entanglement homogeneity'];
-                TP.Context().entanglement_intensity = data['data']['entanglement intensity'];
-                TP.Context().entanglement_homogeneity = 1 - Math.acos(TP.Context().entanglement_homogeneity)/(Math.PI/2);
-            
-                //if(TP.Context().view[graphName].getAssociatedView("catalyst") != null)
-                //objectReferences.VisualizationObject.entanglementCaught(graphName, TP.Context().view[graphName].getAssociatedView("catalyst")[0].getID());
-                //console.log("should be entering 'entanglement caught'");
-                objectReferences.VisualizationObject.entanglementCaught(graphName);
+                    data['data']['entanglement homogeneity'] = objectReferences.ToolObject.round(data['data']['entanglement homogeneity'], TP.Context().digitPrecision);
+                    data['data']['entanglement intensity'] = objectReferences.ToolObject.round(data['data']['entanglement intensity'], TP.Context().digitPrecision);
+
+                    TP.Context().entanglement_homogeneity = data['data']['entanglement homogeneity'];
+                    TP.Context().entanglement_intensity = data['data']['entanglement intensity'];
+                    TP.Context().entanglement_homogeneity = 1 - Math.acos(TP.Context().entanglement_homogeneity)/(Math.PI/2);
+                
+                    objectReferences.VisualizationObject.entanglementCaught(graphName, null, multiplex_property);
+                }
 
             }
 
             if (associatedViewFound == false)
                 return;
-            //console.log("received data after synchronization: ")
-            //console.log(data);
 
             var tempGraph = new TP.Graph();
             tempGraph.nodes(data.nodes, typeGraph);
@@ -477,7 +464,6 @@ var TP = TP || {};
                 nodeList.push(d.baseID);
             });
             //assert(true, "SETTING VIEW TARGET SELECTION");
-            //console.log(targetView, TP.Context().view[targetView].getType(), nodeList)
             //TP.Context().view[targetView].setTargetSelection(nodeList);
 
 
@@ -488,7 +474,6 @@ var TP = TP || {};
             //    nodeList.push(d.baseID);
             //});
             //assert(true, "SETTING VIEW TARGET SELECTION");
-            //console.log(targetView, TP.Context().view[targetView].getType(), nodeList)
             TP.Context().view[targetView].setTargetSelection(nodeList);
             TP.Context().view[targetView].getGraphDrawing().show(tempGraph);
 
